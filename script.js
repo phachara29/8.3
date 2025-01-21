@@ -24,7 +24,7 @@ const images = [
         "เจ้าเต่า เชื่องช้าอย่างเจ้าน่ะเหรอ",
         "จะมาชนะกระต่ายที่รวดเร็วอย่างข้าได้ ไม่มีทางหรอก"
     ],
-      textDuration: [6500, 6500, 2000, 5000, 4000, 4000, 5000] // กำหนดเวลาแตกต่างกันสำหรับแต่ละข้อความในอาร์เรย์
+      textDuration: [6500, 6500, 2000, 5000, 4000, 4000, 5000] 
     },
     {
         src: "img/บทที่3.jpg",
@@ -105,66 +105,57 @@ const images = [
       textDuration: [10000]
     },
   ];
-  
+
   const textContainer = document.getElementById("text-container");
   const storyImage = document.getElementById("story-image");
   let currentIndex = 0;
   let audio = new Audio();
   
+  // ปิดการทำงานของปุ่มเมื่อเริ่มเรื่องราว
+  document.getElementById("start-button").addEventListener("click", () => {
+      document.getElementById("start-button").disabled = true; // ปิดปุ่มเมื่อเริ่มเล่น
+      playStoryWithText();
+  });
+
   // ฟังก์ชันเล่นเรื่องราวพร้อมภาพ เสียง และพิมพ์ข้อความตามเสียง
   function playStoryWithText() {
-    const currentItem = images[currentIndex];
-  
-    // โหลดภาพ
-    const img = new Image();
-    img.src = currentItem.src;
-    img.onload = () => {
-      storyImage.src = currentItem.src;
-    };
-    img.onerror = () => {
-      console.error("ไม่สามารถโหลดภาพได้:", currentItem.src);
-    };
-  
-    // โหลดเสียง
-    audio.src = currentItem.sound;
-    audio.onerror = () => {
-      console.error("ไม่สามารถโหลดเสียงได้:", currentItem.sound);
-    };
-  
-    // พิมพ์ข้อความทีละกลุ่ม (ตาม index ของ array ใน text)
-    const textGroups = currentItem.text; // array ของข้อความ
-    const textDurations = currentItem.textDuration; // เวลาแต่ละข้อความ
-    let groupIndex = 0;
-  
-    function typeTextGroup() {
-      if (groupIndex < textGroups.length) {
-        textContainer.textContent = textGroups[groupIndex]; // แสดงข้อความกลุ่มปัจจุบัน
-        groupIndex++;
-  
-        // ตั้งเวลาเปลี่ยนข้อความตามเวลาใน textDurations
-        setTimeout(typeTextGroup, textDurations[groupIndex - 1]); 
-      }
+    if (currentIndex >= images.length) {
+      textContainer.textContent = "เรื่องราวจบแล้ว!";
+      return;
     }
-  
-    // เมื่อเสียงเริ่มเล่น
+
+    const currentItem = images[currentIndex];
+
+    // หยุดเสียงถ้ามีเสียงเล่นอยู่
+    audio.pause();
+    audio.currentTime = 0;
+
+    // โหลดภาพ
+    storyImage.src = currentItem.src;
+
+    // โหลดเสียงและเล่น
+    audio.src = currentItem.sound;
     audio.onplay = () => {
-      textContainer.textContent = ""; // ล้างข้อความเดิม
-      typeTextGroup(); // เริ่มแสดงข้อความทีละกลุ่ม
+        textContainer.textContent = "";
+        typeTextGroup(); // เริ่มแสดงข้อความเมื่อเสียงเล่น
     };
-  
-    // เมื่อเสียงเล่นจบ
+
     audio.onended = () => {
-      currentIndex++;
-      if (currentIndex < images.length) {
+        currentIndex++;
         playStoryWithText();
-      } else {
-        textContainer.textContent = "เรื่องราวจบแล้ว!";
-      }
     };
-  
-    audio.play(); // เล่นเสียง
+
+    audio.play();
+
+    // พิมพ์ข้อความทีละกลุ่ม
+    let groupIndex = 0;
+    function typeTextGroup() {
+        if (groupIndex < currentItem.text.length) {
+            textContainer.textContent = currentItem.text[groupIndex];
+            setTimeout(() => {
+                groupIndex++;
+                typeTextGroup();
+            }, currentItem.textDuration[groupIndex]);
+        }
+    }
   }
-  
-  // เริ่มเล่นเมื่อคลิกปุ่ม
-  document.getElementById("start-button").addEventListener("click", playStoryWithText);
-  
